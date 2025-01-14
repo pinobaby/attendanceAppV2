@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-
-const HomeScreen = ({ navigation }) => {
+import { NavigationProp } from '@react-navigation/native';
+const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Attendance App</Text>

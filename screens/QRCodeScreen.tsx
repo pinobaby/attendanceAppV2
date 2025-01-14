@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Button } from 'react-native';
 import QRCode from 'qrcode';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+
+
+type RootStackParamList = {
+  QRCode: { qrValue: string; studentName: string };  
+};
+
+type QRCodeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'QRCode'>;
+type QRCodeScreenRouteProp = RouteProp<RootStackParamList, 'QRCode'>;
 
 interface QRCodeScreenProps {
-  route: { params: { qrValue: string, studentName: string } };
-  navigation: any;
+  route: QRCodeScreenRouteProp;
+  navigation: QRCodeScreenNavigationProp;
 }
 
 export default function QRCodeScreen({ route, navigation }: QRCodeScreenProps) {
