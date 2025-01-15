@@ -44,6 +44,11 @@ import AddStudentScreen from '../screens/AddStudentScreen';
 import StudentListScreen from '../screens/StudentListScreen';
 import AttendanceScreen from '../screens/AttendanceScreen';
 
+import CreateCourseScreen from '@/screens/CreateCourseScreen';
+import ManageCoursesScreen from '@/screens/ManageCoursesScreen';
+import TakeAttendanceScreen from '@/screens/TakeAttendanceScreen';
+import AttendanceHistoryScreen from '@/screens/AttendanceHistoryScreen';
+
 // Define los parámetros de las pantallas de tu stack
 type RootStackParamList = {
   Login: undefined;
@@ -52,7 +57,11 @@ type RootStackParamList = {
   AddStudent: undefined;
   StudentList: undefined;
   Attendance: undefined;
-  QRCode: { qrValue: string; studentName: string }; 
+  QRCode: { qrValue: string; studentName: string };
+  CreateCourse: undefined;
+  ManageCourses: undefined;
+  TakeAttendance: undefined;
+  AttendanceHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -70,6 +79,12 @@ const AppNavigator = () => {
         {/* <Stack.Screen name="QRCode" component={QRCodeScreen} /> */}
         <Stack.Screen name="StudentList" component={StudentListScreen} options={{ title: 'Estudiantes' }} />
         <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: 'Código QR' }} />
+
+        <Stack.Screen name="CreateCourse" component={CreateCourseScreen} />
+        <Stack.Screen name="ManageCourses" component={ManageCoursesScreen} />
+        <Stack.Screen name="TakeAttendance" component={TakeAttendanceScreen} />
+        <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
+        
       </Stack.Navigator>
 
   );
