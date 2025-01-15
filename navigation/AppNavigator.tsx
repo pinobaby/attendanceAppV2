@@ -65,9 +65,11 @@ const AppNavigator = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="AddStudent" component={AddStudentScreen} />
-        <Stack.Screen name="StudentList" component={StudentListScreen} />
+        {/* <Stack.Screen name="StudentList" component={StudentListScreen} /> */}
         <Stack.Screen name="Attendance" component={AttendanceScreen} />
-        <Stack.Screen name="QRCode" component={QRCodeScreen} />
+        {/* <Stack.Screen name="QRCode" component={QRCodeScreen} /> */}
+        <Stack.Screen name="StudentList" component={StudentListScreen} options={{ title: 'Estudiantes' }} />
+        <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: 'Código QR' }} />
       </Stack.Navigator>
 
   );
