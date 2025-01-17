@@ -48,8 +48,10 @@ import CreateCourseScreen from '@/screens/CreateCourseScreen';
 import ManageCoursesScreen from '@/screens/ManageCoursesScreen';
 import TakeAttendanceScreen from '@/screens/TakeAttendanceScreen';
 import AttendanceHistoryScreen from '@/screens/AttendanceHistoryScreen';
+import CourseDetailsScreen from '@/screens/CourseDetailsScreen';
 
-// Define los parámetros de las pantallas de tu stack
+
+
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -62,7 +64,9 @@ type RootStackParamList = {
   ManageCourses: undefined;
   TakeAttendance: undefined;
   AttendanceHistory: undefined;
+  CourseDetails: undefined;
 };
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -84,7 +88,7 @@ const AppNavigator = () => {
         <Stack.Screen name="ManageCourses" component={ManageCoursesScreen} />
         <Stack.Screen name="TakeAttendance" component={TakeAttendanceScreen} />
         <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
-        
+        <Stack.Screen name="CourseDetails" component={CourseDetailsScreen} options={{ title: 'Detalles del Curso' }} />
       </Stack.Navigator>
 
   );
