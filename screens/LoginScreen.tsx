@@ -1,16 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import {View,Text,TextInput,StyleSheet,TouchableOpacity,KeyboardAvoidingView,Platform,ActivityIndicator,Alert,} from "react-native";
 import { auth } from "../firebase/config";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { NavigationProp } from "@react-navigation/native";
@@ -72,10 +61,6 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
       style={styles.container}
     >
       <Animated.View entering={FadeIn.duration(1000)} style={styles.header}>
-        {/* <Image
-          source={require('../assets/login-icon.png')} // Reemplaza con tu propia imagen
-          style={styles.logo}
-        /> */}
         <Text style={styles.title}>Bienvenido</Text>
         <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
       </Animated.View>

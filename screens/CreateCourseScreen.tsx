@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, ImageBackground, TouchableOpacity, Text, Platform } from 'react-native';
 import { db } from '../firebase/config';
@@ -7,7 +5,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { MaterialIcons } from '@expo/vector-icons';
+
 export default function CreateCourseScreen() {
   const [courseName, setCourseName] = useState('');
   const [error, setError] = useState('');
@@ -35,7 +33,6 @@ export default function CreateCourseScreen() {
 
   return (
     <ImageBackground 
-      // source={require('../assets/bg-pattern.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -175,171 +172,3 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
-
-
-// import React, { useState } from 'react';
-// import { View, TextInput, StyleSheet, ImageBackground, TouchableOpacity, Text, Platform } from 'react-native';
-// import { auth, db } from '../firebase/config';
-// import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-// import { useNavigation } from '@react-navigation/native';
-// import { LinearGradient } from 'expo-linear-gradient';
-// import { MaterialIcons } from '@expo/vector-icons';
-
-// export default function CreateCourseScreen() {
-//   const [courseName, setCourseName] = useState('');
-//   const [error, setError] = useState('');
-//   const navigation = useNavigation();
-
-//   const handleCreateCourse = async () => {
-//     const userId = auth.currentUser?.uid;
-//     if (!userId) return;
-    
-//     await addDoc(collection(db, "users", userId, "courses"), {
-//       name: courseName,
-//       createdAt: serverTimestamp(),
-//       students: []  
-//     });
-//   };
-
-//   return (
-//     <ImageBackground 
-//       // source={require('../assets/bg-pattern.png')}
-//       style={styles.background}
-//       resizeMode="cover"
-//     >
-//       <LinearGradient
-//         colors={['rgba(255,255,255,0.95)', 'rgba(245,245,245,0.95)']}
-//         style={styles.overlay}
-//       >
-//         <View style={styles.container}>
-//           <View style={styles.card}>
-//             <Text style={styles.title}>Nuevo Curso</Text>
-            
-//             <View style={styles.inputContainer}>
-//               <Text style={styles.label}>Nombre del Curso</Text>
-//               <View style={styles.inputWrapper}>
-//                 <MaterialIcons name="class" size={20} color="#2A5298" style={styles.inputIcon} />
-//                 <TextInput
-//                   style={styles.input}
-//                   placeholder="Ej: Matemáticas 101"
-//                   placeholderTextColor="#888"
-//                   value={courseName}
-//                   onChangeText={(text) => {
-//                     setCourseName(text);
-//                     setError('');
-//                   }}
-//                   autoFocus
-//                 />
-//               </View>
-//               {error ? <Text style={styles.errorText}>{error}</Text> : null}
-//             </View>
-
-//             <TouchableOpacity 
-//               style={[styles.button, !courseName && styles.disabledButton]}
-//               onPress={handleCreateCourse}
-//               disabled={!courseName}
-//             >
-//               <MaterialIcons name="add-circle" size={24} color="#fff" />
-//               <Text style={styles.buttonText}>Crear Curso</Text>
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-//       </LinearGradient>
-//     </ImageBackground>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   background: {
-//     flex: 1,
-//   },
-//   overlay: {
-//     flex: 1,
-//     padding: 20,
-//   },
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     paddingHorizontal: 25,
-//   },
-//   card: {
-//     backgroundColor: 'white',
-//     borderRadius: 20,
-//     padding: 25,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 10,
-//     elevation: 5,
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontFamily: Platform.select({ android: 'Roboto-Bold', ios: 'System' }),
-//     color: '#2A5298',
-//     textAlign: 'center',
-//     marginBottom: 30,
-//   },
-//   inputContainer: {
-//     marginBottom: 25,
-//   },
-//   label: {
-//     fontFamily: Platform.select({ android: 'Roboto-Medium', ios: 'System' }),
-//     color: '#444',
-//     marginBottom: 8,
-//     fontSize: 16,
-//   },
-//   inputWrapper: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#f8f9fa',
-//     borderRadius: 12,
-//     borderWidth: 1,
-//     borderColor: '#e9ecef',
-//   },
-//   inputIcon: {
-//     marginLeft: 15,
-//     marginRight: 10,
-//   },
-//   input: {
-//     flex: 1,
-//     height: 50,
-//     paddingHorizontal: 15,
-//     fontSize: 16,
-//     fontFamily: Platform.select({ android: 'Roboto-Regular', ios: 'System' }),
-//     color: '#333',
-//   },
-//   button: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     backgroundColor: '#2A5298',
-//     paddingVertical: 15,
-//     borderRadius: 12,
-//     gap: 12,
-//     ...Platform.select({
-//       ios: {
-//         shadowColor: '#2A5298',
-//         shadowOffset: { width: 0, height: 4 },
-//         shadowOpacity: 0.3,
-//         shadowRadius: 6,
-//       },
-//       android: {
-//         elevation: 6,
-//       },
-//     }),
-//   },
-//   disabledButton: {
-//     opacity: 0.6,
-//   },
-//   buttonText: {
-//     color: 'white',
-//     fontSize: 18,
-//     fontFamily: Platform.select({ android: 'Roboto-Medium', ios: 'System' }),
-//   },
-//   errorText: {
-//     color: '#dc3545',
-//     fontFamily: Platform.select({ android: 'Roboto-Italic', ios: 'System' }),
-//     fontSize: 14,
-//     marginTop: 8,
-//   },
-// });

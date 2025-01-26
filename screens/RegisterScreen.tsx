@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator,KeyboardAvoidingView, Platform,} from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
 import { NavigationProp } from '@react-navigation/native';
@@ -72,10 +63,6 @@ const RegisterScreen = ({ navigation }: { navigation: NavigationProp<any> }) => 
       style={styles.container}
     >
       <Animated.View entering={FadeIn.duration(1000)} style={styles.header}>
-        {/* <Image
-          source={require('../assets/register-icon.png')}
-          style={styles.logo}
-        /> */}
         <Text style={styles.title}>Crear Cuenta</Text>
         <Text style={styles.subtitle}>Regístrate para comenzar</Text>
       </Animated.View>
