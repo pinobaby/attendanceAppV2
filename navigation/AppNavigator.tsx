@@ -1,11 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
-
-
 import CreateCourseScreen from '@/screens/CreateCourseScreen';
 import ManageCoursesScreen from '@/screens/ManageCoursesScreen';
 import TakeAttendanceScreen from '@/screens/TakeAttendanceScreen';
@@ -26,7 +23,7 @@ type RootStackParamList = {
   ManageCourses: undefined;
   TakeAttendance: undefined;
   AttendanceHistory: undefined;
-  CourseDetails: undefined;
+  CourseDetails: { courseId: string };
 };
 
 
@@ -39,7 +36,6 @@ const AppNavigator = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
-  
         <Stack.Screen name="CreateCourse" component={CreateCourseScreen} />
         <Stack.Screen name="ManageCourses" component={ManageCoursesScreen} />
         <Stack.Screen name="TakeAttendance" component={TakeAttendanceScreen} />

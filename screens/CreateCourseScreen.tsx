@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, ImageBackground, TouchableOpacity, Text, Platform } from 'react-native';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+  Text,
+  Platform,
+  KeyboardAvoidingView,
+  ScrollView,
+} from 'react-native';
 import { db } from '../firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 export default function CreateCourseScreen() {
   const [courseName, setCourseName] = useState('');
@@ -16,7 +27,7 @@ export default function CreateCourseScreen() {
       setError('Por favor ingresa un nombre para el curso');
       return;
     }
-    
+
     try {
       await addDoc(collection(db, 'courses'), {
         name: courseName,
@@ -40,39 +51,46 @@ export default function CreateCourseScreen() {
         colors={['rgba(255,255,255,0.95)', 'rgba(245,245,245,0.95)']}
         style={styles.overlay}
       >
-        <View style={styles.container}>
-          <View style={styles.card}>
-            <Text style={styles.title}>Nuevo Curso</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Nombre del Curso</Text>
-              <View style={styles.inputWrapper}>
-                <Icon name="class" size={20} color="#2A5298" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ej: Matemáticas 101"
-                  placeholderTextColor="#888"
-                  value={courseName}
-                  onChangeText={(text) => {
-                    setCourseName(text);
-                    setError('');
-                  }}
-                  autoFocus
-                />
-              </View>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          style={styles.flex}
+        >
+          <ScrollView contentContainerStyle={styles.flex}>
+            <View style={styles.container}>
+              <View style={styles.card}>
+                <Text style={styles.title}>Nuevo Curso</Text>
+                
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Nombre del Curso</Text>
+                  <View style={styles.inputWrapper}>
+                    <Icon name="class" size={20} color="#2A5298" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Ej: Matemáticas 101"
+                      placeholderTextColor="#888"
+                      value={courseName}
+                      onChangeText={(text) => {
+                        setCourseName(text);
+                        setError('');
+                      }}
+                      autoFocus
+                    />
+                  </View>
+                  {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                </View>
 
-            <TouchableOpacity 
-              style={[styles.button, !courseName && styles.disabledButton]}
-              onPress={handleCreateCourse}
-              disabled={!courseName}
-            >
-              <Icon name="add-circle" size={24} color="#fff" />
-              <Text style={styles.buttonText}>Crear Curso</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+                <TouchableOpacity 
+                  style={[styles.button, !courseName && styles.disabledButton]}
+                  onPress={handleCreateCourse}
+                  disabled={!courseName}
+                >
+                  <Icon name="add-circle" size={24} color="#fff" />
+                  <Text style={styles.buttonText}>Crear Curso</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
     </ImageBackground>
   );
@@ -85,6 +103,9 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     padding: 20,
+  },
+  flex: {
+    flex: 1,
   },
   container: {
     flex: 1,

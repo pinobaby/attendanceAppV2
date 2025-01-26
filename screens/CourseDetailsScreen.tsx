@@ -3,13 +3,14 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   FlatList,
   Alert,
   StyleSheet,
   TouchableOpacity,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { db } from '../firebase/config';
 import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
@@ -17,7 +18,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { captureRef } from 'react-native-view-shot';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 interface Student {
   name: string;
@@ -39,6 +40,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
   const [studentEmail, setStudentEmail] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [addStudentModalVisible, setAddStudentModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const qrRef = useRef<any>(null);
 
@@ -47,7 +49,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
       try {
         setLoading(true);
         const courseDoc = await getDoc(doc(db, 'courses', courseId));
-        
+
         if (courseDoc.exists()) {
           const data = courseDoc.data();
           setStudents(data.students || []);
@@ -70,17 +72,18 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
 
     const newStudent: Student = {
       name: studentName.trim(),
-      email: studentEmail.toLowerCase().trim()
+      email: studentEmail.toLowerCase().trim(),
     };
 
     try {
       const courseRef = doc(db, 'courses', courseId);
       await updateDoc(courseRef, {
-        students: arrayUnion(newStudent)
+        students: arrayUnion(newStudent),
       });
-      setStudents(prev => [...prev, newStudent]);
+      setStudents((prev) => [...prev, newStudent]);
       setStudentName('');
       setStudentEmail('');
+      setAddStudentModalVisible(false); // Cierra el modal después de agregar
       Alert.alert('Éxito', 'Alumno agregado correctamente.');
     } catch (error) {
       console.error('Error al agregar alumno:', error);
@@ -92,9 +95,9 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     try {
       const courseRef = doc(db, 'courses', courseId);
       await updateDoc(courseRef, {
-        students: arrayRemove(student)
+        students: arrayRemove(student),
       });
-      setStudents(prev => prev.filter(s => s.email !== student.email));
+      setStudents((prev) => prev.filter((s) => s.email !== student.email));
       Alert.alert('Éxito', 'Alumno eliminado correctamente.');
     } catch (error) {
       console.error('Error al eliminar alumno:', error);
@@ -114,28 +117,24 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     }
 
     try {
-      // Paso 1: Capturar el QR como imagen
       const uri = await captureRef(qrRef, {
         format: 'png',
         quality: 1,
       });
 
-      // Paso 2: Crear nombre de archivo válido
       const fileName = `QR_${selectedStudent.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
       const fileUri = FileSystem.documentDirectory + fileName;
 
-      // Paso 3: Copiar el archivo a ubicación permanente
       await FileSystem.copyAsync({
         from: uri,
-        to: fileUri
+        to: fileUri,
       });
 
-      // Paso 4: Compartir el archivo
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'image/png',
           dialogTitle: 'Compartir QR de Asistencia',
-          UTI: 'public.image'
+          UTI: 'public.image',
         });
       } else {
         Alert.alert('Error', 'La función de compartir no está disponible en este dispositivo.');
@@ -164,55 +163,82 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
         keyExtractor={(item) => item.email}
         renderItem={({ item }) => (
           <View style={styles.studentContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.studentInfo}
               onPress={() => handleStudentPress(item.email)}
             >
               <Text style={styles.studentName}>{item.name}</Text>
               <Text style={styles.studentEmail}>{item.email}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={() => deleteStudent(item)}
-              style={styles.deleteButton}
-            >
+
+            <TouchableOpacity onPress={() => deleteStudent(item)} style={styles.deleteButton}>
               <Ionicons name="trash" size={20} color="#ff4444" />
             </TouchableOpacity>
           </View>
         )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No hay alumnos registrados</Text>
-        }
+        ListEmptyComponent={<Text style={styles.emptyText}>No hay alumnos registrados</Text>}
         contentContainerStyle={styles.listContent}
       />
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre del alumno"
-          value={studentName}
-          onChangeText={setStudentName}
-          placeholderTextColor="#888"
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Correo electrónico"
-          value={studentEmail}
-          onChangeText={setStudentEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholderTextColor="#888"
-        />
-        
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={addStudent}
-        >
-          <Text style={styles.addButtonText}>Agregar Alumno</Text>
-        </TouchableOpacity>
-      </View>
+   
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => setAddStudentModalVisible(true)}
+      >
+        <MaterialIcons name="add" size={24} color="white" />
+      </TouchableOpacity>
 
+      <Modal
+        visible={addStudentModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setAddStudentModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalBackdrop}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Agregar Alumno</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre del alumno"
+              value={studentName}
+              onChangeText={setStudentName}
+              placeholderTextColor="#888"
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Correo electrónico"
+              value={studentEmail}
+              onChangeText={setStudentEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#888"
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setAddStudentModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.addButtonModal]}
+                onPress={addStudent}
+              >
+                <Text style={styles.buttonText}>Agregar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Modal para mostrar el QR */}
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -222,7 +248,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Código QR de Asistencia</Text>
-            
+
             <QRCode
               value={selectedStudent}
               size={200}
@@ -238,7 +264,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
                 <Ionicons name="share" size={20} color="white" />
                 <Text style={styles.buttonText}>Compartir</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.modalButton, styles.closeButton]}
                 onPress={() => setModalVisible(false)}
@@ -303,38 +329,6 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 10,
   },
-  inputContainer: {
-    padding: 16,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    marginTop: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  input: {
-    height: 50,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#333',
-  },
-  addButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   listContent: {
     paddingBottom: 16,
   },
@@ -363,6 +357,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
+  input: {
+    height: 50,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#333',
+    width: '100%',
+  },
   modalButtons: {
     flexDirection: 'row',
     gap: 10,
@@ -376,6 +381,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+  },
+  addButtonModal: {
+    backgroundColor: '#4CAF50',
+  },
   shareButton: {
     backgroundColor: '#2196F3',
   },
@@ -386,5 +397,21 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '500',
     fontSize: 16,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#2A5298',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
