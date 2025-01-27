@@ -417,17 +417,24 @@
 //     color: '#ff4444',
 //   },
 // });
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { Calendar, CalendarList, Agenda } from 'react-native-calendars';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  Alert, 
+  Platform 
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { Calendar } from 'react-native-calendars';
 import { db, auth } from '../firebase/config';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import * as XLSX from 'xlsx';
-import RNPickerSelect from 'react-native-picker-select';
 
 interface AttendanceRecord {
   date: string;
@@ -505,7 +512,6 @@ const AttendanceHistoryScreen = ({ route }) => {
 
   const generateExcel = async () => {
     try {
-      // Crear estructura de datos
       const wsData = [
         ['Estudiante', 'Fecha', 'Estado'],
         ...attendanceData.map(record => [
@@ -515,23 +521,19 @@ const AttendanceHistoryScreen = ({ route }) => {
         ])
       ];
 
-      // Crear hoja de cálculo
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Asistencias');
 
-      // Generar archivo
       const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
       const uri = FileSystem.cacheDirectory + 'asistencias.xlsx';
       await FileSystem.writeAsStringAsync(uri, wbout, {
         encoding: FileSystem.EncodingType.Base64
       });
 
-      // Compartir archivo
       await shareAsync(uri, {
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        dialogTitle: 'Exportar Asistencias',
-        UTI: 'com.microsoft.excel.xlsx'
+        dialogTitle: 'Exportar Asistencias'
       });
     } catch (error) {
       Alert.alert('Error', 'No se pudo generar el archivo');
@@ -541,7 +543,7 @@ const AttendanceHistoryScreen = ({ route }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#2196F3" />
       </View>
     );
   }
@@ -550,18 +552,32 @@ const AttendanceHistoryScreen = ({ route }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Historial de Asistencias</Text>
-        <TouchableOpacity onPress={generateExcel} style={styles.excelButton}>
-          <MaterialIcons name="file-download" size={24} color="white" />
-          <Text style={styles.excelButtonText}>Exportar a Excel</Text>
-        </TouchableOpacity>
+        <View style={[
+          styles.pickerContainer,
+          Platform.OS === 'ios' && styles.iosPickerContainer
+        ]}>
+          <Picker
+            selectedValue={selectedStudent}
+            onValueChange={(itemValue) => setSelectedStudent(itemValue)}
+            dropdownIconColor="#666"
+            mode="dropdown"
+            style={styles.picker}
+            itemStyle={styles.pickerItem}
+          >
+            <Picker.Item 
+              label="Todos los estudiantes" 
+              value="" 
+            />
+            {students.map((student, index) => (
+              <Picker.Item 
+                key={index} 
+                label={student} 
+                value={student} 
+              />
+            ))}
+          </Picker>
+        </View>
       </View>
-
-      <RNPickerSelect
-        onValueChange={value => setSelectedStudent(value)}
-        items={students.map(student => ({ label: student, value: student }))}
-        placeholder={{ label: 'Todos los estudiantes', value: '' }}
-        style={pickerSelectStyles}
-      />
 
       <Calendar
         markedDates={markedDates}
@@ -570,10 +586,20 @@ const AttendanceHistoryScreen = ({ route }) => {
           calendarBackground: '#fff',
           todayTextColor: '#00adf5',
           dayTextColor: '#2d4150',
-          textDisabledColor: '#d9e1e8'
+          textDisabledColor: '#d9e1e8',
+          arrowColor: '#2196F3',
         }}
         style={styles.calendar}
       />
+
+      <TouchableOpacity 
+        onPress={generateExcel} 
+        style={styles.floatingButton}
+        activeOpacity={0.9}
+      >
+        <MaterialIcons name="file-download" size={26} color="white" />
+        <Text style={styles.floatingButtonText}>Exportar</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -582,59 +608,81 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff'
+    backgroundColor: '#f5f5f5'
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20
+    marginBottom: 15
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold'
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#1a237e',
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  iosPickerContainer: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+    height: 50,
+  },
+  picker: {
+    width: '100%',
+    color: '#333',
+    backgroundColor: 'transparent',
+    transform: Platform.select({
+      ios: [{ scaleX: 1 }, { scaleY: 1 }],
+    }),
+  },
+  pickerItem: {
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: 'white',
   },
   calendar: {
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
-    elevation: 3
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  excelButton: {
+  floatingButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
     flexDirection: 'row',
     backgroundColor: '#2196F3',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center'
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 30,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 10
   },
-  excelButtonText: {
+  floatingButtonText: {
     color: 'white',
-    marginLeft: 5
-  }
-});
-
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 4,
-    color: 'black',
-    paddingRight: 30,
-    marginBottom: 15
+    marginLeft: 12,
+    fontWeight: '600',
+    fontSize: 16
   },
-  inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 0.5,
-    borderColor: 'gray',
-    borderRadius: 8,
-    color: 'black',
-    paddingRight: 30,
-    marginBottom: 15
-  }
 });
 
 export default AttendanceHistoryScreen;
