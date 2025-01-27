@@ -1,19 +1,11 @@
-
-
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
 import { db, auth } from '../firebase/config';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator'; 
+import { useNavigation } from 'expo-router';
 
 interface Course {
   id: string;
@@ -24,16 +16,16 @@ interface Course {
   students?: any[];
 }
 
-interface NavigationProps {
-  navigate: (screen: string, params: { courseId: string }) => void;
-}
-
+type ManageCoursesNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'ManageCourses'
+>;
 export default function ManageCoursesScreen() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigation = useNavigation<NavigationProp<NavigationProps>>();
+  const navigation = useNavigation<ManageCoursesNavigationProp>();
 
   const fetchCourses = async (userId: string) => {
     try {
@@ -82,7 +74,30 @@ export default function ManageCoursesScreen() {
   const handleSelectCourse = (courseId: string) => {
     navigation.navigate('CourseDetails', { courseId });
   };
+  
 
+  // const renderCourseItem = ({ item }: { item: Course }) => (
+  //   <TouchableOpacity
+  //     style={styles.courseCard}
+  //     onPress={() => handleSelectCourse(item.id)}
+  //   >
+  //     <View style={styles.courseInfo}>
+  //       <Text style={styles.courseName}>{item.name}</Text>
+  //       <View style={styles.metaContainer}>
+  //         <Text style={styles.metaText}>
+  //           <Ionicons name="people" size={14} color="#666" /> {item.students?.length || 0}
+  //         </Text>
+  //         {item.createdAt && (
+  //           <Text style={styles.metaText}>
+  //             <Ionicons name="calendar" size={14} color="#666" />{' '}
+  //             {item.createdAt.toDate().toLocaleDateString()}
+  //           </Text>
+  //         )}
+  //       </View>
+  //     </View>
+  //     <Ionicons name="chevron-forward" size={24} color="#999" />
+  //   </TouchableOpacity>
+  // );
   const renderCourseItem = ({ item }: { item: Course }) => (
     <TouchableOpacity
       style={styles.courseCard}
@@ -102,7 +117,17 @@ export default function ManageCoursesScreen() {
           )}
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={24} color="#999" />
+  
+      <View style={styles.actionsContainer}>
+    
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('AttendanceHistory', { courseId: item.id })}
+          style={styles.historyButton}
+        >
+          <Ionicons name="time" size={20} color="#007AFF" />
+        </TouchableOpacity>
+        <Ionicons name="chevron-forward" size={24} color="#999" />
+      </View>
     </TouchableOpacity>
   );
 
@@ -256,5 +281,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  historyButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#E3F2FD',
   },
 });

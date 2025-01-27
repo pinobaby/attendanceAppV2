@@ -31,13 +31,13 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.button, styles.tertiaryButton]}
             onPress={() => navigation.navigate("AttendanceHistory")}
           >
             <Icon name="history" size={24} color="#fff" style={styles.icon} />
             <Text style={styles.buttonText}>Historial</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </LinearGradient>
     </ImageBackground>

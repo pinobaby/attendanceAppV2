@@ -11,7 +11,7 @@ import CourseDetailsScreen from '@/screens/CourseDetailsScreen';
 
 
 
-type RootStackParamList = {
+ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
@@ -22,7 +22,7 @@ type RootStackParamList = {
   CreateCourse: undefined;
   ManageCourses: undefined;
   TakeAttendance: undefined;
-  AttendanceHistory: undefined;
+  AttendanceHistory: { courseId: string };
   CourseDetails: { courseId: string };
 };
 
