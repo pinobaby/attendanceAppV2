@@ -12,8 +12,17 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { db } from '../firebase/config';
-import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { db, auth } from '../firebase/config'; 
+import { 
+  doc, 
+  getDoc, 
+  collection, 
+  addDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  getDocs 
+} from 'firebase/firestore';
 import QRCode from 'react-native-qrcode-svg';
 import { captureRef } from 'react-native-view-shot';
 import * as FileSystem from 'expo-file-system';
@@ -21,6 +30,7 @@ import * as Sharing from 'expo-sharing';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 interface Student {
+  id: string;
   name: string;
   email: string;
 }
@@ -43,17 +53,26 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
   const [addStudentModalVisible, setAddStudentModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const qrRef = useRef<any>(null);
+  const user = auth.currentUser;
 
   useEffect(() => {
-    const fetchCourseData = async () => {
+    const fetchStudents = async () => {
       try {
         setLoading(true);
-        const courseDoc = await getDoc(doc(db, 'courses', courseId));
-
-        if (courseDoc.exists()) {
-          const data = courseDoc.data();
-          setStudents(data.students || []);
+        if (!user) {
+          Alert.alert('Error', 'Usuario no autenticado');
+          return;
         }
+
+        const alumnosRef = collection(db, 'users', user.uid, 'cursos', courseId, 'alumnos');
+        const querySnapshot = await getDocs(alumnosRef);
+        
+        const alumnosData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Student[];
+        
+        setStudents(alumnosData);
       } catch (error) {
         Alert.alert('Error', 'No se pudo cargar la información del curso.');
       } finally {
@@ -61,8 +80,8 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
       }
     };
 
-    fetchCourseData();
-  }, [courseId]);
+    fetchStudents();
+  }, [courseId, user]);
 
   const addStudent = async () => {
     if (!studentName.trim() || !studentEmail.trim()) {
@@ -70,20 +89,35 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
       return;
     }
 
-    const newStudent: Student = {
-      name: studentName.trim(),
-      email: studentEmail.toLowerCase().trim(),
-    };
+    if (!user) {
+      Alert.alert('Error', 'Debes iniciar sesión para agregar alumnos');
+      return;
+    }
 
     try {
-      const courseRef = doc(db, 'courses', courseId);
-      await updateDoc(courseRef, {
-        students: arrayUnion(newStudent),
-      });
-      setStudents((prev) => [...prev, newStudent]);
+      const alumnosRef = collection(db, 'users', user.uid, 'cursos', courseId, 'alumnos');
+      
+      // Verificar si el correo ya existe
+      const emailQuery = query(alumnosRef, where('email', '==', studentEmail.toLowerCase().trim()));
+      const querySnapshot = await getDocs(emailQuery);
+      
+      if (!querySnapshot.empty) {
+        Alert.alert('Error', 'El correo electrónico ya está registrado');
+        return;
+      }
+
+      const newStudent = {
+        name: studentName.trim(),
+        email: studentEmail.toLowerCase().trim(),
+        createdAt: new Date(),
+      };
+
+      const docRef = await addDoc(alumnosRef, newStudent);
+      
+      setStudents(prev => [...prev, { ...newStudent, id: docRef.id }]);
       setStudentName('');
       setStudentEmail('');
-      setAddStudentModalVisible(false); // Cierra el modal después de agregar
+      setAddStudentModalVisible(false);
       Alert.alert('Éxito', 'Alumno agregado correctamente.');
     } catch (error) {
       console.error('Error al agregar alumno:', error);
@@ -91,20 +125,22 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     }
   };
 
-  const deleteStudent = async (student: Student) => {
+  const deleteStudent = async (studentId: string) => {
+    if (!user) {
+      Alert.alert('Error', 'Debes iniciar sesión para eliminar alumnos');
+      return;
+    }
+
     try {
-      const courseRef = doc(db, 'courses', courseId);
-      await updateDoc(courseRef, {
-        students: arrayRemove(student),
-      });
-      setStudents((prev) => prev.filter((s) => s.email !== student.email));
+      const alumnoRef = doc(db, 'users', user.uid, 'cursos', courseId, 'alumnos', studentId);
+      await deleteDoc(alumnoRef);
+      setStudents(prev => prev.filter(s => s.id !== studentId));
       Alert.alert('Éxito', 'Alumno eliminado correctamente.');
     } catch (error) {
       console.error('Error al eliminar alumno:', error);
       Alert.alert('Error', 'No se pudo eliminar al alumno.');
     }
   };
-
   const handleStudentPress = (email: string) => {
     setSelectedStudent(email);
     setModalVisible(true);
@@ -170,8 +206,11 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
               <Text style={styles.studentName}>{item.name}</Text>
               <Text style={styles.studentEmail}>{item.email}</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => deleteStudent(item)} style={styles.deleteButton}>
+      
+            <TouchableOpacity 
+              onPress={() => deleteStudent(item.id)} 
+              style={styles.deleteButton}
+            >
               <Ionicons name="trash" size={20} color="#ff4444" />
             </TouchableOpacity>
           </View>
@@ -238,7 +277,6 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Modal para mostrar el QR */}
       <Modal
         visible={modalVisible}
         transparent={true}

@@ -10,12 +10,11 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
-import { db } from '../firebase/config';
+import { db, auth } from '../firebase/config'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
 
 export default function CreateCourseScreen() {
   const [courseName, setCourseName] = useState('');
@@ -28,12 +27,17 @@ export default function CreateCourseScreen() {
       return;
     }
 
+    const user = auth.currentUser;
+    if (!user) {
+      setError('Debes iniciar sesión para crear cursos');
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'courses'), {
+     
+      await addDoc(collection(db, 'users', user.uid, 'cursos'), {
         name: courseName,
         createdAt: serverTimestamp(),
-        students: [],
-        attendanceRecords: [],
       });
       navigation.goBack();
     } catch (error) {
@@ -95,6 +99,7 @@ export default function CreateCourseScreen() {
     </ImageBackground>
   );
 }
+
 
 const styles = StyleSheet.create({
   background: {

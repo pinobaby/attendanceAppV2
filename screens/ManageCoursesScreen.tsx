@@ -1,7 +1,16 @@
 
+
 import React, { useEffect, useState } from 'react';
-import {View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
-import { db } from '../firebase/config';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl
+} from 'react-native';
+import { db, auth } from '../firebase/config';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,11 +35,14 @@ export default function ManageCoursesScreen() {
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation<NavigationProp<NavigationProps>>();
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (userId: string) => {
     try {
-      const q = query(collection(db, 'courses'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
+      const q = query(
+        collection(db, 'users', userId, 'cursos'),
+        orderBy('createdAt', 'desc')
+      );
       
+      const querySnapshot = await getDocs(q);
       const coursesData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -48,12 +60,23 @@ export default function ManageCoursesScreen() {
   };
 
   useEffect(() => {
-    fetchCourses();
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        fetchCourses(user.uid);
+      } else {
+        setCourses([]);
+        setLoading(false);
+      }
+    });
+    
+    return unsubscribe;
   }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchCourses();
+    if (auth.currentUser) {
+      fetchCourses(auth.currentUser.uid);
+    }
   };
 
   const handleSelectCourse = (courseId: string) => {
@@ -95,7 +118,7 @@ export default function ManageCoursesScreen() {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity onPress={fetchCourses} style={styles.retryButton}>
+        <TouchableOpacity onPress={handleRefresh} style={styles.retryButton}>
           <Text style={styles.retryText}>Reintentar</Text>
         </TouchableOpacity>
       </View>
@@ -135,6 +158,8 @@ export default function ManageCoursesScreen() {
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

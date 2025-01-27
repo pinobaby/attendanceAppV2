@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Platform} from 'react-native';
-import { db } from '../firebase/config';
-import { collection, getDocs, doc, getDoc, Timestamp } from 'firebase/firestore';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { db, auth } from '../firebase/config';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -11,27 +11,37 @@ interface Course {
 }
 
 interface AttendanceRecord {
-  date: Timestamp | Date;
-  studentsPresent: string[];
+  id: string;
+  studentEmail: string;
+  date: Date;
+  status: string;
 }
 
 export default function AttendanceHistoryScreen() {
-  
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const user = auth.currentUser;
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
+        if (!user) {
+          setError('Usuario no autenticado');
+          return;
+        }
+
         setLoading(true);
-        const querySnapshot = await getDocs(collection(db, 'courses'));
+        const cursosRef = collection(db, 'users', user.uid, 'cursos');
+        const querySnapshot = await getDocs(cursosRef);
+        
         const coursesData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           name: doc.data().name,
         }));
+        
         setCourses(coursesData);
         setError(null);
       } catch (err) {
@@ -43,44 +53,41 @@ export default function AttendanceHistoryScreen() {
     };
 
     fetchCourses();
-  }, []);
+  }, [user]);
 
-  const safeConvertToDate = (firebaseDate: Timestamp | Date | any): Date => {
-    try {
-      if (firebaseDate instanceof Timestamp) {
-        return firebaseDate.toDate();
-      }
-      if (firebaseDate?.toDate) {
-        return firebaseDate.toDate();
-      }
-      if (typeof firebaseDate === 'string') {
-        return new Date(firebaseDate);
-      }
-      return new Date();
-    } catch (error) {
-      console.error('Error converting date:', error);
-      return new Date();
-    }
-  };
-
+  
   const fetchAttendanceRecords = async (courseId: string) => {
     try {
-      setLoading(true);
-      const courseRef = doc(db, 'courses', courseId);
-      const courseDoc = await getDoc(courseRef);
-
-      if (courseDoc.exists()) {
-        const data = courseDoc.data();
-        const history = data.attendanceHistory?.map((record: any) => ({
-          date: record.date ? safeConvertToDate(record.date) : new Date(),
-          studentsPresent: record.studentsPresent || [],
-        })) || [];
-        
-        setAttendanceRecords(history);
-        setError(null);
-      } else {
-        setError('Curso no encontrado');
+      if (!user) {
+        setError('Usuario no autenticado');
+        return;
       }
+
+      setLoading(true);
+      const asistenciasRef = collection(
+        db, 
+        'users', 
+        user.uid, 
+        'cursos', 
+        courseId, 
+        'asistencias'
+      );
+      
+      const q = query(asistenciasRef, orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+
+      const records = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          studentEmail: data.studentEmail,
+          date: data.date?.toDate() || new Date(),
+          status: data.status || 'presente'
+        };
+      });
+
+      setAttendanceRecords(records);
+      setError(null);
     } catch (error) {
       setError('Error al cargar el historial');
       console.error('Error fetching attendance:', error);
@@ -105,59 +112,54 @@ export default function AttendanceHistoryScreen() {
     </TouchableOpacity>
   );
 
-  const renderAttendanceItem = ({ item }: { item: AttendanceRecord }) => {
-    const recordDate = safeConvertToDate(item.date);
-    
-    return (
-      <View style={styles.attendanceCard}>
-        <View style={styles.cardHeader}>
-          <MaterialIcons name="history" size={20} color="#4CAF50" />
-          <Text style={styles.cardTitle}>Registro de Asistencia</Text>
-        </View>
+  
 
-        <View style={styles.detailRow}>
-          <MaterialIcons name="calendar-today" size={18} color="#2A5298" />
-          <Text style={styles.detailText}>
-            {recordDate.toLocaleDateString('es-ES', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <MaterialIcons name="access-time" size={18} color="#2A5298" />
-          <Text style={styles.detailText}>
-            {recordDate.toLocaleTimeString('es-ES', {
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </Text>
-        </View>
-
-        <View style={styles.studentsContainer}>
-          <View style={styles.studentsHeader}>
-            <MaterialIcons name="people-alt" size={18} color="#2A5298" />
-            <Text style={styles.studentsCount}>
-              {item.studentsPresent.length} Estudiantes
-            </Text>
-          </View>
-          
-          <FlatList
-            data={item.studentsPresent}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <Text style={styles.studentEmail} numberOfLines={1} ellipsizeMode="tail">
-                {item}
-              </Text>
-            )}
-          />
-        </View>
+  const renderAttendanceItem = ({ item }: { item: AttendanceRecord }) => (
+    <View style={styles.attendanceCard}>
+      <View style={styles.cardHeader}>
+        <MaterialIcons name="history" size={20} color="#4CAF50" />
+        <Text style={styles.cardTitle}>Registro de Asistencia</Text>
       </View>
-    );
-  };
+
+      <View style={styles.detailRow}>
+        <MaterialIcons name="person" size={18} color="#2A5298" />
+        <Text style={styles.detailText}>{item.studentEmail}</Text>
+      </View>
+
+      <View style={styles.detailRow}>
+        <MaterialIcons name="calendar-today" size={18} color="#2A5298" />
+        <Text style={styles.detailText}>
+          {item.date.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </Text>
+      </View>
+
+      <View style={styles.detailRow}>
+        <MaterialIcons name="access-time" size={18} color="#2A5298" />
+        <Text style={styles.detailText}>
+          {item.date.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </Text>
+      </View>
+
+      <View style={styles.statusContainer}>
+        <Text style={[
+          styles.statusText,
+          item.status === 'presente' ? styles.present : styles.absent
+        ]}>
+          {item.status.toUpperCase()}
+        </Text>
+      </View>
+    </View>
+  );
+
+
 
   return (
     <LinearGradient
@@ -393,5 +395,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontFamily: Platform.select({ android: 'Roboto-Medium', ios: 'System' }),
     textAlign: 'center',
+  },
+
+  statusContainer: {
+    marginTop: 15,
+    alignItems: 'flex-end',
+  },
+  statusText: {
+    fontSize: 14,
+    fontFamily: Platform.select({ android: 'Roboto-Bold', ios: 'System' }),
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  present: {
+    backgroundColor: '#4CAF5020',
+    color: '#4CAF50',
+  },
+  absent: {
+    backgroundColor: '#ff444420',
+    color: '#ff4444',
   },
 });
