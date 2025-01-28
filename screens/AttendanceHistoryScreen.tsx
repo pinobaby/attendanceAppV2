@@ -994,7 +994,7 @@ import {
   UIManager,
   Modal
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+
 import { Calendar } from 'react-native-calendars';
 import { db, auth } from '../firebase/config';
 import { collection, query, getDocs } from 'firebase/firestore';
@@ -1002,7 +1002,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import * as XLSX from 'xlsx';
-
+import { Picker } from '@react-native-picker/picker';
 interface AttendanceRecord {
   date: string;
   status: 'presente' | 'ausente';
@@ -1192,7 +1192,7 @@ const AttendanceHistoryScreen = ({ route }) => {
         ]}>
           <Picker
             selectedValue={selectedStudent}
-            onValueChange={(itemValue) => setSelectedStudent(itemValue)}
+            onValueChange={(itemValue: React.SetStateAction<string>) => setSelectedStudent(itemValue)}
             dropdownIconColor="#666"
             mode="dropdown"
             style={styles.picker}
