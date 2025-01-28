@@ -27,6 +27,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
       await signInWithEmailAndPassword(auth, email, password);
       navigation.navigate("Home");
     } catch (error: any) {
+      console.error("Error de autenticación:", error.code, error.message);
       setError(error.message || "Error de autenticación");
     } finally {
       setIsLoading(false);

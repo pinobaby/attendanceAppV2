@@ -1,24 +1,34 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
+import { initializeAuth, getReactNativePersistence, } from 'firebase/auth';
+import { getFirestore, enableNetwork, } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDtYGtHA5NRqyLT5cLTjwJmsuTNucmmci4",
-  authDomain: "YOUR_AUTH_DOMAIN",
+  apiKey: "AIzaSyCxEWFCQGd5DpFd5NUQBRtLev-GIwUiz_4",
+  authDomain: "attendanceapp-ee027.firebaseapp.com",
   projectId: "attendanceapp-ee027",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "854959312573",
+  storageBucket: "attendanceapp-ee027.firebasestorage.app",
+  messagingSenderId: "854959312573",
+  appId: "1:854959312573:android:8f2806882fba83f0ab71d4",
 };
 
-const app = initializeApp(firebaseConfig);
+
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage) 
 });
-export const db = getFirestore(app);
 
+console.log("Firebase inicializado:", app);
 
+const db = getFirestore(app);
 
+enableNetwork(db)
+  .then(() => {
+    console.log("Firestore está en línea");
+  })
+  .catch((error) => {
+    console.error("Error al conectar a Firestore:", error);
+  });
 
+export { db };

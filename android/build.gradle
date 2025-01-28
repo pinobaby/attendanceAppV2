@@ -39,3 +39,53 @@ allprojects {
         maven { url 'https://www.jitpack.io' }
     }
 }
+
+// apply plugin: 'com.android.application'
+// apply plugin: 'com.facebook.react'
+// apply plugin: 'com.google.gms.google-services' 
+
+// android {
+//     compileSdkVersion rootProject.ext.compileSdkVersion
+
+//     defaultConfig {
+//         applicationId "com.anonymous.attendanceAppV2" 
+//         minSdkVersion rootProject.ext.minSdkVersion
+//         targetSdkVersion rootProject.ext.targetSdkVersion
+//         versionCode 1
+//         versionName "1.0"
+//     }
+
+//     buildTypes {
+//         release {
+//             minifyEnabled false
+//             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+//         }
+//     }
+// }
+
+// dependencies {
+//     implementation fileTree(dir: "libs", include: ["*.jar"])
+//     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+
+//     implementation platform('com.google.firebase:firebase-bom:32.8.1') 
+//     implementation 'com.google.firebase:firebase-auth'
+//     implementation 'com.google.firebase:firebase-firestore'
+//     implementation 'com.google.firebase:firebase-analytics'
+
+   
+//     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+//     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
+//         exclude group:'com.facebook.fbjni'
+//     }
+//     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
+//         exclude group:'com.facebook.flipper'
+//         exclude group:'com.squareup.okhttp3', module:'okhttp'
+//     }
+//     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}") {
+//         exclude group:'com.facebook.flipper'
+//     }
+// }
+
+
+// apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

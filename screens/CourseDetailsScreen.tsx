@@ -97,7 +97,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     try {
       const alumnosRef = collection(db, 'users', user.uid, 'cursos', courseId, 'alumnos');
       
-      // Verificar si el correo ya existe
+    
       const emailQuery = query(alumnosRef, where('email', '==', studentEmail.toLowerCase().trim()));
       const querySnapshot = await getDocs(emailQuery);
       
