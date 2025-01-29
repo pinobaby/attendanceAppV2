@@ -8,17 +8,16 @@ import {
   TouchableOpacity,
   Platform,
   Linking,
+  PermissionsAndroid,
 } from "react-native";
 import { db, auth } from "../firebase/config";
 import {
   collection,
   getDocs,
-  doc,
-  getDoc,
-  addDoc,
-  serverTimestamp,
   query,
   where,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { Camera, CameraView } from "expo-camera";
 import { useNavigation } from "@react-navigation/native";
@@ -46,8 +45,44 @@ export default function TakeAttendanceScreen() {
 
   useEffect(() => {
     const requestCameraPermission = async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
+      try {
+        
+        if (Platform.OS === "android") {
+          const hasCameraPermission = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.CAMERA
+          );
+          
+          if (hasCameraPermission) {
+            setHasPermission(true);
+            return;
+          }
+  
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+              title: "Permiso de Cámara",
+              message: "Esta app necesita acceso a la cámara para escanear códigos QR.",
+              buttonNeutral: "Preguntar después",
+              buttonNegative: "Cancelar",
+              buttonPositive: "Aceptar",
+            }
+          );
+          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+        } else {
+          const { status: existingStatus } = await Camera.getCameraPermissionsAsync();
+          
+          if (existingStatus === "granted") {
+            setHasPermission(true);
+            return;
+          }
+  
+          const { status } = await Camera.requestCameraPermissionsAsync();
+          setHasPermission(status === "granted");
+        }
+      } catch (error) {
+        console.error("Error checking/requesting permission:", error);
+        setHasPermission(false);
+      }
     };
 
     const fetchCourses = async () => {
@@ -80,6 +115,7 @@ export default function TakeAttendanceScreen() {
   };
 
   const handleQRRead = async ({ data }: { data: string }) => {
+    console.log("QR Code Scanned:", data);
     const now = Date.now();
 
     if (
@@ -184,7 +220,9 @@ export default function TakeAttendanceScreen() {
           <CameraView
             style={styles.camera}
             onBarcodeScanned={isProcessing ? undefined : handleQRRead}
-            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr"],
+            }}
           >
             {isProcessing && (
               <View style={styles.processingOverlay}>
