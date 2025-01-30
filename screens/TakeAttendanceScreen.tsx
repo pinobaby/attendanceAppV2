@@ -17,16 +17,20 @@ import {
   query,
   where,
   addDoc,
-  serverTimestamp,
+  writeBatch,
+  doc,
+  orderBy,
 } from "firebase/firestore";
 import { Camera, CameraView } from "expo-camera";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { format } from "date-fns";
 
 interface Course {
   id: string;
   name: string;
+  alumnos?: string[];
 }
 
 export default function TakeAttendanceScreen() {
@@ -36,9 +40,8 @@ export default function TakeAttendanceScreen() {
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const lastScannedData = useRef<{ data: string; timestamp: number } | null>(
-    null
-  );
+  const [scannedStudents, setScannedStudents] = useState<string[]>([]);
+  const lastScannedData = useRef<{ data: string; timestamp: number } | null>(null);
   const scanCooldown = 5000;
   const user = auth.currentUser;
   const navigation = useNavigation();
@@ -46,51 +49,29 @@ export default function TakeAttendanceScreen() {
   useEffect(() => {
     const requestCameraPermission = async () => {
       try {
-        
         if (Platform.OS === "android") {
-          const hasCameraPermission = await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.CAMERA
-          );
-          
-          if (hasCameraPermission) {
-            setHasPermission(true);
-            return;
-          }
-  
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.CAMERA,
             {
               title: "Permiso de Cámara",
               message: "Esta app necesita acceso a la cámara para escanear códigos QR.",
-              buttonNeutral: "Preguntar después",
-              buttonNegative: "Cancelar",
               buttonPositive: "Aceptar",
             }
           );
           setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
         } else {
-          const { status: existingStatus } = await Camera.getCameraPermissionsAsync();
-          
-          if (existingStatus === "granted") {
-            setHasPermission(true);
-            return;
-          }
-  
           const { status } = await Camera.requestCameraPermissionsAsync();
           setHasPermission(status === "granted");
         }
       } catch (error) {
-        console.error("Error checking/requesting permission:", error);
+        console.error("Error al solicitar permiso:", error);
         setHasPermission(false);
       }
     };
 
     const fetchCourses = async () => {
       try {
-        if (!user) {
-          Alert.alert("Error", "Usuario no autenticado");
-          return;
-        }
+        if (!user) return;
 
         const cursosRef = collection(db, "users", user.uid, "cursos");
         const querySnapshot = await getDocs(cursosRef);
@@ -110,14 +91,28 @@ export default function TakeAttendanceScreen() {
     fetchCourses();
   }, [user]);
 
-  const handleCourseSelection = (courseId: string) => {
-    setSelectedCourse(courseId);
+  const handleCourseSelection = async (courseId: string) => {
+    try {
+      setLoading(true);
+      const alumnosRef = collection(db, "users", user!.uid, "cursos", courseId, "alumnos");
+      const snapshot = await getDocs(alumnosRef);
+      const emails = snapshot.docs.map(doc => doc.data().email);
+      
+      setCourses(prev => prev.map(c => 
+        c.id === courseId ? { ...c, alumnos: emails } : c
+      ));
+      
+      setSelectedCourse(courseId);
+      setScannedStudents([]);
+    } catch (error) {
+      Alert.alert("Error", "Error al cargar estudiantes del curso");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQRRead = async ({ data }: { data: string }) => {
-    console.log("QR Code Scanned:", data);
     const now = Date.now();
-
     if (
       lastScannedData.current &&
       lastScannedData.current.data === data &&
@@ -133,20 +128,12 @@ export default function TakeAttendanceScreen() {
     lastScannedData.current = { data, timestamp: now };
 
     try {
-      const alumnosRef = collection(
-        db,
-        "users",
-        user.uid,
-        "cursos",
-        selectedCourse,
-        "alumnos"
-      );
-      const q = query(alumnosRef, where("email", "==", data));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        throw new Error("Estudiante no registrado en este curso");
+      const currentCourse = courses.find(c => c.id === selectedCourse);
+      if (!currentCourse?.alumnos?.includes(data)) {
+        throw new Error("Estudiante no pertenece a este curso");
       }
+
+      setScannedStudents(prev => [...prev, data]);
 
       const asistenciasRef = collection(
         db,
@@ -157,9 +144,13 @@ export default function TakeAttendanceScreen() {
         "asistencias"
       );
 
+      const localDate = new Date(); // Fecha local
+      const formattedDate = format(localDate, "yyyy-MM-dd"); // Fecha formateada
+
       await addDoc(asistenciasRef, {
         studentEmail: data,
-        date: serverTimestamp(),
+        date: localDate, // Fecha local
+        formattedDate, // Fecha formateada para consultas
         status: "presente",
       });
 
@@ -172,6 +163,60 @@ export default function TakeAttendanceScreen() {
         setIsProcessing(false);
         lastScannedData.current = null;
       }, scanCooldown);
+    }
+  };
+
+  const markAbsentStudents = async () => {
+    try {
+      setIsProcessing(true);
+      
+      if (!user || !selectedCourse) {
+        throw new Error("Datos incompletos para registrar ausentes");
+      }
+
+      const currentCourse = courses.find(c => c.id === selectedCourse);
+      if (!currentCourse?.alumnos) return;
+
+      const absentStudents = currentCourse.alumnos.filter(
+        email => !scannedStudents.includes(email)
+      );
+
+      const batch = writeBatch(db);
+      const asistenciasRef = collection(
+        db,
+        "users",
+        user.uid,
+        "cursos",
+        selectedCourse,
+        "asistencias"
+      );
+
+      const localDate = new Date(); // Fecha local
+      const formattedDate = format(localDate, "yyyy-MM-dd"); // Fecha formateada
+
+      absentStudents.forEach(email => {
+        const docRef = doc(asistenciasRef);
+        batch.set(docRef, {
+          studentEmail: email,
+          date: localDate, // Fecha local
+          formattedDate, // Fecha formateada
+          status: "ausente",
+        });
+      });
+
+      await batch.commit();
+      Alert.alert(
+        "Éxito", 
+        `Asistencia finalizada: 
+        ${scannedStudents.length} presentes, 
+        ${absentStudents.length} ausentes`
+      );
+      
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert("Error", "Error al marcar ausentes");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -250,6 +295,15 @@ export default function TakeAttendanceScreen() {
               <Text style={styles.scanText}>
                 Enfoca el código QR dentro del marco
               </Text>
+
+              <TouchableOpacity
+                style={styles.finishButton}
+                onPress={markAbsentStudents}
+                disabled={isProcessing}
+              >
+                <MaterialIcons name="done-all" size={24} color="white" />
+                <Text style={styles.finishButtonText}>Finalizar Asistencia</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.closeButton}
@@ -381,6 +435,33 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
     letterSpacing: 0.5,
+  },
+  finishButton: {
+    position: 'absolute',
+    bottom: 40,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  finishButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   closeButton: {
     position: "absolute",

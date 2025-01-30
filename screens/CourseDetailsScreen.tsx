@@ -15,13 +15,14 @@ import {
 import { db, auth } from '../firebase/config'; 
 import { 
   doc, 
-  getDoc, 
   collection, 
   addDoc, 
   deleteDoc, 
   query, 
   where, 
-  getDocs 
+  getDocs,
+  orderBy,
+  onSnapshot
 } from 'firebase/firestore';
 import QRCode from 'react-native-qrcode-svg';
 import { captureRef } from 'react-native-view-shot';
@@ -33,6 +34,7 @@ interface Student {
   id: string;
   name: string;
   email: string;
+  createdAt: Date;
 }
 
 interface CourseDetailsScreenProps {
@@ -42,6 +44,7 @@ interface CourseDetailsScreenProps {
     };
   };
 }
+
 
 export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps) {
   const { courseId } = route.params;
@@ -56,6 +59,8 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
   const user = auth.currentUser;
 
   useEffect(() => {
+    let unsubscribe: () => void;
+
     const fetchStudents = async () => {
       try {
         setLoading(true);
@@ -65,14 +70,19 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
         }
 
         const alumnosRef = collection(db, 'users', user.uid, 'cursos', courseId, 'alumnos');
-        const querySnapshot = await getDocs(alumnosRef);
+        const q = query(alumnosRef, orderBy('createdAt', 'asc'));
         
-        const alumnosData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Student[];
-        
-        setStudents(alumnosData);
+        unsubscribe = onSnapshot(q, (querySnapshot) => {
+          const alumnosData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name,
+            email: doc.data().email,
+            createdAt: doc.data().createdAt?.toDate() || new Date(),
+          })) as Student[];
+          
+          setStudents(alumnosData);
+        });
+
       } catch (error) {
         Alert.alert('Error', 'No se pudo cargar la información del curso.');
       } finally {
@@ -81,6 +91,10 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     };
 
     fetchStudents();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [courseId, user]);
 
   const addStudent = async () => {
@@ -97,7 +111,6 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     try {
       const alumnosRef = collection(db, 'users', user.uid, 'cursos', courseId, 'alumnos');
       
-    
       const emailQuery = query(alumnosRef, where('email', '==', studentEmail.toLowerCase().trim()));
       const querySnapshot = await getDocs(emailQuery);
       
@@ -112,13 +125,10 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
         createdAt: new Date(),
       };
 
-      const docRef = await addDoc(alumnosRef, newStudent);
-      
-      setStudents(prev => [...prev, { ...newStudent, id: docRef.id }]);
+      await addDoc(alumnosRef, newStudent);
       setStudentName('');
       setStudentEmail('');
       setAddStudentModalVisible(false);
-      Alert.alert('Éxito', 'Alumno agregado correctamente.');
     } catch (error) {
       console.error('Error al agregar alumno:', error);
       Alert.alert('Error', 'No se pudo agregar el alumno.');
@@ -134,13 +144,12 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
     try {
       const alumnoRef = doc(db, 'users', user.uid, 'cursos', courseId, 'alumnos', studentId);
       await deleteDoc(alumnoRef);
-      setStudents(prev => prev.filter(s => s.id !== studentId));
-      Alert.alert('Éxito', 'Alumno eliminado correctamente.');
     } catch (error) {
       console.error('Error al eliminar alumno:', error);
       Alert.alert('Error', 'No se pudo eliminar al alumno.');
     }
   };
+
   const handleStudentPress = (email: string) => {
     setSelectedStudent(email);
     setModalVisible(true);
@@ -177,8 +186,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
       }
     } catch (error) {
       console.error('Error al generar el QR:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Hubo un problema al generar o compartir el QR.';
-      Alert.alert('Error', errorMessage);
+      Alert.alert('Error', 'Hubo un problema al generar o compartir el QR.');
     }
   };
 
@@ -192,11 +200,14 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Gestión de Estudiantes</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Gestión de Estudiantes</Text>
+        <Text style={styles.subtitle}>Ordenados por fecha de registro</Text>
+      </View>
 
       <FlatList
         data={students}
-        keyExtractor={(item) => item.email}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.studentContainer}>
             <TouchableOpacity
@@ -205,6 +216,9 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
             >
               <Text style={styles.studentName}>{item.name}</Text>
               <Text style={styles.studentEmail}>{item.email}</Text>
+              {/* <Text style={styles.registrationDate}>
+                Registrado el: {item.createdAt.toLocaleDateString()}
+              </Text> */}
             </TouchableOpacity>
       
             <TouchableOpacity 
@@ -219,7 +233,6 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
         contentContainerStyle={styles.listContent}
       />
 
-   
       <TouchableOpacity
         style={styles.floatingButton}
         onPress={() => setAddStudentModalVisible(true)}
@@ -329,12 +342,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  header: {
+    marginBottom: 15,
+    paddingTop: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1a237e',
-    marginVertical: 20,
     textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 5,
   },
   studentContainer: {
     backgroundColor: 'white',
@@ -362,6 +384,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  registrationDate: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   deleteButton: {
     padding: 8,
