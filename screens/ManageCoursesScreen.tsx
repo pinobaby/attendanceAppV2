@@ -1,10 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  RefreshControl, 
+  Modal, 
+  TextInput, 
+  Alert 
+} from 'react-native';
 import { db, auth } from '../firebase/config';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  doc, 
+  updateDoc, 
+  deleteDoc 
+} from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator'; 
+import { RootStackParamList } from '../navigation/AppNavigator';
 import { useNavigation } from 'expo-router';
 
 interface Course {
@@ -20,11 +39,15 @@ type ManageCoursesNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'ManageCourses'
 >;
+
 export default function ManageCoursesScreen() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [newCourseName, setNewCourseName] = useState('');
   const navigation = useNavigation<ManageCoursesNavigationProp>();
 
   const fetchCourses = async (userId: string) => {
@@ -35,10 +58,18 @@ export default function ManageCoursesScreen() {
       );
       
       const querySnapshot = await getDocs(q);
-      const coursesData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Course[];
+      const coursesData = await Promise.all(
+        querySnapshot.docs.map(async (doc) => {
+          const studentsRef = collection(doc.ref, 'alumnos');
+          const studentsSnapshot = await getDocs(studentsRef);
+          return {
+            id: doc.id,
+            ...doc.data(),
+            students: studentsSnapshot.docs,
+            createdAt: doc.data().createdAt
+          } as Course;
+        })
+      );
       
       setCourses(coursesData);
       setError(null);
@@ -48,6 +79,50 @@ export default function ManageCoursesScreen() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleUpdateCourse = async () => {
+    if (!selectedCourse || !newCourseName.trim()) {
+      Alert.alert('Error', 'El nombre del curso no puede estar vacío');
+      return;
+    }
+    
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const courseRef = doc(db, 'users', user.uid, 'cursos', selectedCourse.id);
+      await updateDoc(courseRef, { name: newCourseName });
+      
+      setCourses(courses.map(course => 
+        course.id === selectedCourse.id ? { ...course, name: newCourseName } : course
+      ));
+      
+      setEditModalVisible(false);
+      Alert.alert('Éxito', 'Curso actualizado correctamente');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo actualizar el curso');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!selectedCourse) return;
+    
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const courseRef = doc(db, 'users', user.uid, 'cursos', selectedCourse.id);
+      await deleteDoc(courseRef);
+      
+      setCourses(courses.filter(course => course.id !== selectedCourse.id));
+      setEditModalVisible(false);
+      Alert.alert('Éxito', 'Curso eliminado correctamente');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo eliminar el curso');
+      console.error(error);
     }
   };
 
@@ -71,37 +146,10 @@ export default function ManageCoursesScreen() {
     }
   };
 
-  const handleSelectCourse = (courseId: string) => {
-    navigation.navigate('CourseDetails', { courseId });
-  };
-  
-
-  // const renderCourseItem = ({ item }: { item: Course }) => (
-  //   <TouchableOpacity
-  //     style={styles.courseCard}
-  //     onPress={() => handleSelectCourse(item.id)}
-  //   >
-  //     <View style={styles.courseInfo}>
-  //       <Text style={styles.courseName}>{item.name}</Text>
-  //       <View style={styles.metaContainer}>
-  //         <Text style={styles.metaText}>
-  //           <Ionicons name="people" size={14} color="#666" /> {item.students?.length || 0}
-  //         </Text>
-  //         {item.createdAt && (
-  //           <Text style={styles.metaText}>
-  //             <Ionicons name="calendar" size={14} color="#666" />{' '}
-  //             {item.createdAt.toDate().toLocaleDateString()}
-  //           </Text>
-  //         )}
-  //       </View>
-  //     </View>
-  //     <Ionicons name="chevron-forward" size={24} color="#999" />
-  //   </TouchableOpacity>
-  // );
   const renderCourseItem = ({ item }: { item: Course }) => (
     <TouchableOpacity
       style={styles.courseCard}
-      onPress={() => handleSelectCourse(item.id)}
+      onPress={() => navigation.navigate('CourseDetails', { courseId: item.id })}
     >
       <View style={styles.courseInfo}>
         <Text style={styles.courseName}>{item.name}</Text>
@@ -119,13 +167,25 @@ export default function ManageCoursesScreen() {
       </View>
   
       <View style={styles.actionsContainer}>
-    
+        <TouchableOpacity 
+          onPress={(e) => {
+            e.stopPropagation();
+            setSelectedCourse(item);
+            setNewCourseName(item.name);
+            setEditModalVisible(true);
+          }}
+          style={styles.editButton}
+        >
+          <Ionicons name="pencil" size={20} color="#4CAF50" />
+        </TouchableOpacity>
+        
         <TouchableOpacity 
           onPress={() => navigation.navigate('AttendanceHistory', { courseId: item.id })}
           style={styles.historyButton}
         >
-          <Ionicons name="time" size={20} color="#007AFF" />
+          <Ionicons name="time" size={20} color="#2A5298" />
         </TouchableOpacity>
+        
         <Ionicons name="chevron-forward" size={24} color="#999" />
       </View>
     </TouchableOpacity>
@@ -134,7 +194,7 @@ export default function ManageCoursesScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#2A5298" />
       </View>
     );
   }
@@ -163,7 +223,7 @@ export default function ManageCoursesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#007AFF']}
+            colors={['#2A5298']}
           />
         }
         ListEmptyComponent={
@@ -173,7 +233,51 @@ export default function ManageCoursesScreen() {
           </View>
         }
       />
-      
+
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Editar Curso</Text>
+            
+            <TextInput
+              style={styles.input}
+              value={newCourseName}
+              onChangeText={setNewCourseName}
+              placeholder="Nombre del curso"
+              placeholderTextColor="#999"
+            />
+            
+            <View style={styles.modalButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleUpdateCourse}
+              >
+                <Text style={styles.buttonText}>Guardar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteButton]}
+                onPress={handleDeleteCourse}
+              >
+                <Text style={styles.buttonText}>Eliminar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('CreateCourse')}
@@ -183,8 +287,6 @@ export default function ManageCoursesScreen() {
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -257,7 +359,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2A5298',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -270,7 +372,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2A5298',
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -287,9 +389,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 15,
   },
+  editButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#E8F5E9',
+  },
   historyButton: {
     padding: 8,
     borderRadius: 20,
     backgroundColor: '#E3F2FD',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    fontSize: 16,
+    color: '#333',
+  },
+  modalButtonsContainer: {
+    gap: 10,
+  },
+  modalButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+  },
+  deleteButton: {
+    backgroundColor: '#F44336',
+  },
+  cancelButton: {
+    backgroundColor: '#999',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 16,
   },
 });

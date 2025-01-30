@@ -207,9 +207,7 @@ export default function TakeAttendanceScreen() {
       await batch.commit();
       Alert.alert(
         "Éxito", 
-        `Asistencia finalizada: 
-        ${scannedStudents.length} presentes, 
-        ${absentStudents.length} ausentes`
+        `Asistencia finalizada`
       );
       
       navigation.goBack();
