@@ -193,7 +193,7 @@ export default function CourseDetailsScreen({ route }: CourseDetailsScreenProps)
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#2A5298" />
       </View>
     );
   }
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   shareButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#2A5298',
   },
   closeButton: {
     backgroundColor: '#ff4444',
