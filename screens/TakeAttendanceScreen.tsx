@@ -46,20 +46,8 @@ export default function TakeAttendanceScreen() {
   useEffect(() => {
     const requestCameraPermission = async () => {
       try {
-        if (Platform.OS === "android") {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-            {
-              title: "Permiso de Cámara",
-              message: "Esta app necesita acceso a la cámara para escanear códigos QR.",
-              buttonPositive: "Aceptar",
-            }
-          );
-          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-        } else {
-          const { status } = await Camera.requestCameraPermissionsAsync();
-          setHasPermission(status === "granted");
-        }
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setHasPermission(status === "granted");
       } catch (error) {
         console.error("Error al solicitar permiso:", error);
         setHasPermission(false);
@@ -88,7 +76,7 @@ export default function TakeAttendanceScreen() {
     fetchCourses();
   }, [user]);
 
-
+  
 
   const handleCourseSelection = async (courseId: string) => {
     try {
