@@ -14,12 +14,9 @@ import { db, auth } from "../firebase/config";
 import {
   collection,
   getDocs,
-  query,
-  where,
   addDoc,
   writeBatch,
   doc,
-  orderBy,
 } from "firebase/firestore";
 import { Camera, CameraView } from "expo-camera";
 import { useNavigation } from "@react-navigation/native";
@@ -45,7 +42,7 @@ export default function TakeAttendanceScreen() {
   const scanCooldown = 5000;
   const user = auth.currentUser;
   const navigation = useNavigation();
-
+  
   useEffect(() => {
     const requestCameraPermission = async () => {
       try {
@@ -90,6 +87,8 @@ export default function TakeAttendanceScreen() {
     requestCameraPermission();
     fetchCourses();
   }, [user]);
+
+
 
   const handleCourseSelection = async (courseId: string) => {
     try {
@@ -144,13 +143,13 @@ export default function TakeAttendanceScreen() {
         "asistencias"
       );
 
-      const localDate = new Date(); // Fecha local
-      const formattedDate = format(localDate, "yyyy-MM-dd"); // Fecha formateada
+      const localDate = new Date(); 
+      const formattedDate = format(localDate, "yyyy-MM-dd"); 
 
       await addDoc(asistenciasRef, {
         studentEmail: data,
-        date: localDate, // Fecha local
-        formattedDate, // Fecha formateada para consultas
+        date: localDate,
+        formattedDate, 
         status: "presente",
       });
 
@@ -191,15 +190,15 @@ export default function TakeAttendanceScreen() {
         "asistencias"
       );
 
-      const localDate = new Date(); // Fecha local
-      const formattedDate = format(localDate, "yyyy-MM-dd"); // Fecha formateada
+      const localDate = new Date(); 
+      const formattedDate = format(localDate, "yyyy-MM-dd"); 
 
       absentStudents.forEach(email => {
         const docRef = doc(asistenciasRef);
         batch.set(docRef, {
           studentEmail: email,
-          date: localDate, // Fecha local
-          formattedDate, // Fecha formateada
+          date: localDate, 
+          formattedDate, 
           status: "ausente",
         });
       });

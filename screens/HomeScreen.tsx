@@ -1,5 +1,12 @@
 import React from "react";
-import { View,Text,StyleSheet,ImageBackground,TouchableOpacity,Platform,} from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import { NavigationProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -14,12 +21,18 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
         <View style={styles.container}>
           <Text style={styles.title}>Attendo</Text>
 
-          <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={() => navigation.navigate("ManageCourses")}>
+          <TouchableOpacity
+            style={[styles.button, styles.primaryButton]}
+            onPress={() => navigation.navigate("ManageCourses")}
+          >
             <Icon name="class" size={24} color="#fff" style={styles.icon} />
             <Text style={styles.buttonText}>Mis Cursos</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={() => navigation.navigate("TakeAttendance")}>
+          <TouchableOpacity
+            style={[styles.button, styles.secondaryButton]}
+            onPress={() => navigation.navigate("TakeAttendance")}
+          >
             <Icon
               name="checklist"
               size={24}
@@ -31,13 +44,12 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* <TouchableOpacity
-            style={[styles.button, styles.tertiaryButton]}
-            onPress={() => navigation.navigate("AttendanceHistory")}
+          <TouchableOpacity
+            style={styles.settingsIcon}
+            onPress={() => navigation.navigate("Settings")}
           >
-            <Icon name="history" size={24} color="#fff" style={styles.icon} />
-            <Text style={styles.buttonText}>Historial</Text>
-          </TouchableOpacity> */}
+            <Icon name="settings" size={28} color="#2A5298" />
+          </TouchableOpacity>
         </View>
       </LinearGradient>
     </ImageBackground>
@@ -107,6 +119,13 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 5,
+  },
+  settingsIcon: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
+    right: 20,
+    zIndex: 1,
+    padding: 10,
   },
 });
 

@@ -8,7 +8,8 @@ import ManageCoursesScreen from '@/screens/ManageCoursesScreen';
 import TakeAttendanceScreen from '@/screens/TakeAttendanceScreen';
 import AttendanceHistoryScreen from '@/screens/AttendanceHistoryScreen';
 import CourseDetailsScreen from '@/screens/CourseDetailsScreen';
-
+import SettingsScreen from '@/screens/SettingsScreen';
+import { ThemeProvider } from '@/screens/ThemeContext';
 
 
  export type RootStackParamList = {
@@ -24,6 +25,7 @@ import CourseDetailsScreen from '@/screens/CourseDetailsScreen';
   TakeAttendance: undefined;
   AttendanceHistory: { courseId: string };
   CourseDetails: { courseId: string };
+  Settings: undefined;
 };
 
 
@@ -31,7 +33,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
   return (
-  
+    <ThemeProvider>
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
@@ -41,8 +43,9 @@ const AppNavigator = () => {
         <Stack.Screen name="TakeAttendance" component={TakeAttendanceScreen} />
         <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
         <Stack.Screen name="CourseDetails" component={CourseDetailsScreen} options={{ title: 'Detalles del Curso' }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Configuración' }} />
       </Stack.Navigator>
-
+  </ThemeProvider>
   );
 };
 
