@@ -81,7 +81,22 @@ export default function ManageCoursesScreen() {
       setRefreshing(false);
     }
   };
-
+  const confirmDelete = () => {
+    Alert.alert(
+      "Eliminar curso",
+      "¿Estás seguro de que deseas eliminar este curso? Esta acción no se puede deshacer.",
+      [
+        {
+          text: "No",
+          style: "cancel"
+        },
+        {
+          text: "Sí",
+          onPress: () => handleDeleteCourse()
+        }
+      ]
+    );
+  };
   const handleUpdateCourse = async () => {
     if (!selectedCourse || !newCourseName.trim()) {
       Alert.alert('Error', 'El nombre del curso no puede estar vacío');
@@ -262,7 +277,7 @@ export default function ManageCoursesScreen() {
               
               <TouchableOpacity
                 style={[styles.modalButton, styles.deleteButton]}
-                onPress={handleDeleteCourse}
+                onPress={confirmDelete}
               >
                 <Text style={styles.buttonText}>Eliminar</Text>
               </TouchableOpacity>
