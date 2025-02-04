@@ -68,7 +68,7 @@ const SettingsScreen = ({ navigation }: { navigation: NavigationProp<any> }) => 
       {loading && (
         <ActivityIndicator
           size="large"
-          color="#2A5298"
+          color="#3533c0"
           style={styles.loading}
         />
       )}
@@ -77,7 +77,7 @@ const SettingsScreen = ({ navigation }: { navigation: NavigationProp<any> }) => 
         <Text style={dynamicStyles.sectionTitle}>Perfil</Text>
 
         <View style={dynamicStyles.profileIconContainer}>
-          <Icon name="person" size={80} color="#2A5298" />
+          <Icon name="person" size={80} color="#3533c0" />
         </View>
 
         <TextInput
@@ -138,7 +138,7 @@ const getDynamicStyles = (theme: 'light' | 'dark') =>
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: theme === 'dark' ? '#fff' : '#2A5298',
+      color: theme === 'dark' ? '#fff' : '#3533c0',
       marginBottom: 15,
     },
     profileIconContainer: {
@@ -153,7 +153,7 @@ const getDynamicStyles = (theme: 'light' | 'dark') =>
       color: theme === 'dark' ? '#fff' : '#000',
     },
     button: {
-      backgroundColor: '#2A5298',
+      backgroundColor: '#3533c0',
       borderRadius: 8,
       padding: 15,
       alignItems: 'center',

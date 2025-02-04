@@ -67,7 +67,7 @@ export default function CreateCourseScreen() {
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Nombre del Curso</Text>
                   <View style={styles.inputWrapper}>
-                    <Icon name="class" size={20} color="#2A5298" style={styles.inputIcon} />
+                    <Icon name="class" size={20} color="#3533c0" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="Ej: Matemáticas 101"
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: 'Roboto-Bold',
-    color: '#2A5298',
+    color: '#3533c0',
     textAlign: 'center',
     marginBottom: 30,
   },
@@ -167,13 +167,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
     paddingVertical: 15,
     borderRadius: 12,
     gap: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#2A5298',
+        shadowColor: '#3533c0',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,

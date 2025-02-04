@@ -48,7 +48,7 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
             style={styles.settingsIcon}
             onPress={() => navigation.navigate("Settings")}
           >
-            <Icon name="settings" size={28} color="#2A5298" />
+            <Icon name="settings" size={28} color="#3533c0" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -99,12 +99,12 @@ const styles = StyleSheet.create({
     }),
   },
   primaryButton: {
-    backgroundColor: "#2A5298",
+    backgroundColor: "#3533c0",
   },
   secondaryButton: {
     backgroundColor: "#FFFFFF",
     borderWidth: 2,
-    borderColor: "#2A5298",
+    borderColor: "#3533c0",
   },
   tertiaryButton: {
     backgroundColor: "#4CAF50",
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   darkText: {
-    color: "#2A5298",
+    color: "#3533c0",
   },
   icon: {
     marginRight: 5,

@@ -235,7 +235,7 @@ export default function TakeAttendanceScreen() {
               style={styles.courseCard}
               onPress={() => handleCourseSelection(course.id)}
             >
-              <MaterialIcons name="class" size={28} color="#2A5298" />
+              <MaterialIcons name="class" size={28} color="#3533c0" />
               <Text style={styles.courseName}>{course.name}</Text>
               <MaterialIcons
                 name="arrow-forward-ios"
@@ -304,7 +304,7 @@ export default function TakeAttendanceScreen() {
       {loading && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#2A5298" />
+            <ActivityIndicator size="large" color="#3533c0" />
             <Text style={styles.loadingText}>Cargando cursos...</Text>
           </View>
         </View>
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: Platform.select({ android: "Roboto-Bold", ios: "System" }),
-    color: "#2A5298",
+    color: "#3533c0",
     textAlign: "center",
     marginVertical: 25,
     letterSpacing: 0.8,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     borderColor: "#E9ECEF",
     ...Platform.select({
       ios: {
-        shadowColor: "#2A5298",
+        shadowColor: "#3533c0",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 10,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: "#2A5298",
+        shadowColor: "#3533c0",
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.1,
         shadowRadius: 12,
@@ -504,13 +504,13 @@ const styles = StyleSheet.create({
   },
   permissionText: {
     fontSize: 18,
-    color: "#2A5298",
+    color: "#3533c0",
     textAlign: "center",
     marginBottom: 20,
     fontFamily: Platform.select({ android: "Roboto-Medium", ios: "System" }),
   },
   settingsButton: {
-    backgroundColor: "#2A5298",
+    backgroundColor: "#3533c0",
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,

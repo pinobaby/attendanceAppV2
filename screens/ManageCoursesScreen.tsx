@@ -198,7 +198,7 @@ export default function ManageCoursesScreen() {
           onPress={() => navigation.navigate('AttendanceHistory', { courseId: item.id })}
           style={styles.historyButton}
         >
-          <Ionicons name="time" size={20} color="#2A5298" />
+          <Ionicons name="time" size={20} color="#3533c0" />
         </TouchableOpacity>
         
         <Ionicons name="chevron-forward" size={24} color="#999" />
@@ -209,7 +209,7 @@ export default function ManageCoursesScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2A5298" />
+        <ActivityIndicator size="large" color="#3533c0" />
       </View>
     );
   }
@@ -238,7 +238,7 @@ export default function ManageCoursesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#2A5298']}
+            colors={['#3533c0']}
           />
         }
         ListEmptyComponent={
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
     width: 56,
     height: 56,
     borderRadius: 28,

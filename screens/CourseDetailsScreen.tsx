@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a237e',
+    color: '#3533c0',
     textAlign: 'center',
   },
   subtitle: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   shareButton: {
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
   },
   closeButton: {
     backgroundColor: '#ff4444',
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
     width: 56,
     height: 56,
     borderRadius: 28,

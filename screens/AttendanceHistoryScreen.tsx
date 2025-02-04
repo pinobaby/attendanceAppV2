@@ -197,7 +197,7 @@ const AttendanceHistoryScreen = ({ route }: { route: { params: CourseRouteParams
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2A5298" />
+        <ActivityIndicator size="large" color="#3533c0" />
         <Text style={styles.loadingText}>Cargando datos...</Text>
       </View>
     );
@@ -360,7 +360,7 @@ const calendarTheme = {
   dayTextColor: '#2d4150',
   textDisabledColor: '#d9e1e8',
   arrowColor: '#2196F3',
-  monthTextColor: '#1a237e',
+  monthTextColor: '#3533c0',
   textMonthFontWeight: '600',
   textDayFontSize: 16,
   textMonthFontSize: 18,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1a237e',
+    color: '#3533c0',
     textAlign: 'center',
     marginVertical: 16,
   },
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     bottom: 30,
     right: 20,
     flexDirection: 'row',
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 30,
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 12,
     textAlign: 'center',
-    color: '#1a237e',
+    color: '#3533c0',
   },
   modalRecordContainer: {
     flexDirection: 'row',
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   modalCloseButton: {
     marginTop: 15,
     padding: 12,
-    backgroundColor: '#2A5298',
+    backgroundColor: '#3533c0',
     borderRadius: 8,
     alignItems: 'center',
   },
