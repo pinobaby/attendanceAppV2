@@ -5,9 +5,7 @@ import AppNavigator from "../navigation/AppNavigator";
 
 export default function Page() {
   return (
-    
       <AppNavigator />
-    
   );
 }
 
