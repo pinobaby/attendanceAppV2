@@ -6,12 +6,15 @@ import { useEffect } from "react";
 SplashScreen.preventAutoHideAsync();
 
 
-useEffect(() => {
-  setTimeout(() => {
-    SplashScreen.hideAsync();
-  }, 2000);
-}, []);
+
 export default function Page() {
+
+  useEffect(() => {
+    setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 2000);
+  }, []);
+  
   return (
       <AppNavigator />
   );
