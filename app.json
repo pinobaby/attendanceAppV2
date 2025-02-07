@@ -13,8 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptative-icon.png",
-        "backgroundColor": "#f8f9fb"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
       },
       "package": "com.anonymous.attendanceAppV2"
     },
@@ -30,8 +30,8 @@
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
-          "resizeMode": "cover",
-          "backgroundColor": "#f8f9fb"
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
         }
       ]
     ],
