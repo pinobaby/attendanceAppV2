@@ -4,7 +4,7 @@
     "slug": "attendanceAppV2",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/react-logo@3x.png",
+    "icon": "./assets/images/splash-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptative-icon.png",
+        "foregroundImage": "./assets/images/splash-icon.png",
         "backgroundColor": "#f8f9fb"
       },
       "package": "com.anonymous.attendanceAppV2"
@@ -21,14 +21,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/splash-icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/react-logo@3x.png",
+          "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "cover",
           "backgroundColor": "#f8f9fb"
