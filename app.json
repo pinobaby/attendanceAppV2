@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#f8f9fb"
+        "backgroundColor": "#FFFFFFFF"
       },
       "package": "com.anonymous.attendanceAppV2"
     },
@@ -31,7 +31,7 @@
           "image": "./assets/images/adaptive-icon.png",
           "imageWidth": 200,
           "resizeMode": "cover",
-          "backgroundColor": "#f8f9fb"
+          "backgroundColor": "#FFFFFFFF"
         }
       ]
     ],
