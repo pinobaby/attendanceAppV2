@@ -39,10 +39,22 @@ export default function TakeAttendanceScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [scannedStudents, setScannedStudents] = useState<string[]>([]);
   const lastScannedData = useRef<{ data: string; timestamp: number } | null>(null);
-  const scanCooldown = 5000;
+  const scanCooldown = 1000;
   const user = auth.currentUser;
   const navigation = useNavigation();
-  
+  const isMounted = useRef(true);
+  const cameraRef = useRef<typeof Camera>(null);
+
+   useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      if (cameraRef.current) {
+        cameraRef.current.pausePreview();
+      }
+    };
+  }, []);
+
+
   useEffect(() => {
     const requestCameraPermission = async () => {
       try {
@@ -146,9 +158,11 @@ export default function TakeAttendanceScreen() {
       Alert.alert("Error", error.message || "Error al registrar asistencia");
     } finally {
       setTimeout(() => {
-        setScanned(false);
-        setIsProcessing(false);
-        lastScannedData.current = null;
+        if (isMounted.current) {
+          setScanned(false);
+          setIsProcessing(false);
+          lastScannedData.current = null;
+        }
       }, scanCooldown);
     }
   };
@@ -192,12 +206,16 @@ export default function TakeAttendanceScreen() {
       });
 
       await batch.commit();
-      Alert.alert(
-        "Éxito", 
-        `Asistencia finalizada`
-      );
-      
-      navigation.goBack();
+      Alert.alert("Éxito", "Asistencia finalizada", [
+        { 
+          text: "OK", 
+          onPress: () => {
+            if (isMounted.current) {
+              navigation.navigate("Home" as never);
+            }
+          }
+        }
+      ]);
     } catch (error) {
       Alert.alert("Error", "Error al marcar ausentes");
     } finally {
