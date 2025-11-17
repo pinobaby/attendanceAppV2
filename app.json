@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptative-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#f8f9fb"
       },
       "package": "com.anonymous.attendanceAppV2"
@@ -33,7 +33,8 @@
           "resizeMode": "cover",
           "backgroundColor": "#f8f9fb"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
